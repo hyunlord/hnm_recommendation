@@ -1,4 +1,4 @@
-"""Script to run comprehensive model comparison experiments."""
+"""포괄적인 모델 비교 실험을 실행하는 스크립트."""
 import os
 import sys
 import json
@@ -14,7 +14,7 @@ import seaborn as sns
 from typing import Dict, List, Tuple
 import time
 
-# Setup logging
+# 로깅 설정
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExperimentRunner:
-    """Manages and runs model comparison experiments."""
+    """모델 비교 실험을 관리하고 실행."""
     
     def __init__(
         self, 
@@ -31,12 +31,12 @@ class ExperimentRunner:
         sample_fraction: float = 0.1,
         quick_test: bool = False
     ):
-        """Initialize experiment runner.
+        """실험 러너 초기화.
         
         Args:
-            base_dir: Base directory for experiment outputs
-            sample_fraction: Fraction of data to use (for faster experiments)
-            quick_test: If True, run quick tests with fewer epochs
+            base_dir: 실험 결과를 위한 기본 디렉토리
+            sample_fraction: 사용할 데이터 비율 (빠른 실험을 위해)
+            quick_test: True인 경우, 적은 epoch로 빠른 테스트 실행
         """
         self.base_dir = Path(base_dir)
         self.sample_fraction = sample_fraction
@@ -45,14 +45,14 @@ class ExperimentRunner:
         self.experiment_dir = self.base_dir / f"comparison_{self.timestamp}"
         self.experiment_dir.mkdir(parents=True, exist_ok=True)
         
-        # Define experiments
+        # 실험 정의
         self.experiments = self._define_experiments()
         
     def _define_experiments(self) -> List[Dict]:
-        """Define all experiments to run."""
+        """실행할 모든 실험 정의."""
         experiments = []
         
-        # Base configuration
+        # 기본 설정
         base_config = {
             "data.sample_fraction": self.sample_fraction,
             "training.num_workers": 4,
@@ -63,14 +63,14 @@ class ExperimentRunner:
             base_config["training.epochs"] = 5
             base_config["training.val_check_interval"] = 1.0
         
-        # 1. Popularity Baseline
+        # 1. 인기도 베이스라인
         experiments.append({
             "name": "popularity_baseline",
             "model": "popularity_baseline",
             "config": {**base_config}
         })
         
-        # 2. Matrix Factorization
+        # 2. 행렬 분해
         experiments.append({
             "name": "matrix_factorization",
             "model": "matrix_factorization",
@@ -82,7 +82,7 @@ class ExperimentRunner:
             }
         })
         
-        # 3. Neural Collaborative Filtering
+        # 3. 신경망 협업 필터링
         experiments.append({
             "name": "neural_cf",
             "model": "neural_cf",
@@ -121,9 +121,9 @@ class ExperimentRunner:
             }
         })
         
-        # 6. Advanced experiments with different sampling strategies
+        # 6. 다른 샘플링 전략을 사용한 고급 실험
         if not self.quick_test:
-            # Neural CF with popularity sampling
+            # 인기도 샘플링을 사용한 Neural CF
             experiments.append({
                 "name": "neural_cf_popularity",
                 "model": "neural_cf",
@@ -134,7 +134,7 @@ class ExperimentRunner:
                 }
             })
             
-            # Neural CF with hard negative sampling
+            # 하드 네거티브 샘플링을 사용한 Neural CF
             experiments.append({
                 "name": "neural_cf_hard",
                 "model": "neural_cf",
@@ -145,7 +145,7 @@ class ExperimentRunner:
                 }
             })
             
-            # Wide & Deep without features
+            # 특징 없는 Wide & Deep
             experiments.append({
                 "name": "wide_deep_no_features",
                 "model": "wide_deep",
@@ -159,35 +159,35 @@ class ExperimentRunner:
         return experiments
     
     def run_experiment(self, experiment: Dict) -> Dict:
-        """Run a single experiment.
+        """단일 실험 실행.
         
         Args:
-            experiment: Experiment configuration
+            experiment: 실험 설정
             
         Returns:
-            Results dictionary
+            결과 딕셔너리
         """
         name = experiment["name"]
-        logger.info(f"Running experiment: {name}")
+        logger.info(f"실험 실행 중: {name}")
         
-        # Create experiment directory
+        # 실험 디렉토리 생성
         exp_dir = self.experiment_dir / name
         exp_dir.mkdir(exist_ok=True)
         
-        # Build command
+        # 명령어 구성
         cmd = ["python", "scripts/train.py"]
         cmd.append(f"model={experiment['model']}")
         
-        # Add configuration overrides
+        # 설정 오버라이드 추가
         for key, value in experiment["config"].items():
             cmd.append(f"{key}={value}")
         
-        # Add output directory
+        # 출력 디렉토리 추가
         cmd.append(f"paths.output_dir={exp_dir}")
         cmd.append(f"run_name={name}")
         
-        # Run experiment
-        logger.info(f"Command: {' '.join(cmd)}")
+        # 실험 실행
+        logger.info(f"명령어: {' '.join(cmd)}")
         
         start_time = time.time()
         try:
@@ -200,18 +200,18 @@ class ExperimentRunner:
             
             duration = time.time() - start_time
             
-            # Parse results from output
+            # 출력에서 결과 파싱
             results = self._parse_results(result.stdout, exp_dir)
             results["duration"] = duration
             results["status"] = "success"
             results["name"] = name
             results["model"] = experiment["model"]
             
-            logger.info(f"Experiment {name} completed successfully")
+            logger.info(f"실험 {name} 성공적으로 완료")
             
         except subprocess.CalledProcessError as e:
-            logger.error(f"Experiment {name} failed: {e}")
-            logger.error(f"Error output: {e.stderr}")
+            logger.error(f"실험 {name} 실패: {e}")
+            logger.error(f"오류 출력: {e.stderr}")
             results = {
                 "name": name,
                 "model": experiment["model"],
@@ -220,32 +220,32 @@ class ExperimentRunner:
                 "duration": time.time() - start_time
             }
         
-        # Save individual experiment results
+        # 개별 실험 결과 저장
         with open(exp_dir / "results.json", "w") as f:
             json.dump(results, f, indent=2)
         
         return results
     
     def _parse_results(self, output: str, exp_dir: Path) -> Dict:
-        """Parse results from training output.
+        """학습 출력에서 결과 파싱.
         
         Args:
-            output: Training script output
-            exp_dir: Experiment directory
+            output: 학습 스크립트 출력
+            exp_dir: 실험 디렉토리
             
         Returns:
-            Parsed results
+            파싱된 결과
         """
         results = {}
         
-        # Try to load results from saved YAML file
+        # 저장된 YAML 파일에서 결과 로드 시도
         results_files = list(exp_dir.glob("*_results.yaml"))
         if results_files:
             with open(results_files[0], "r") as f:
                 saved_results = yaml.safe_load(f)
                 results.update(saved_results)
         
-        # Parse from output as backup
+        # 백업으로 출력에서 파싱
         lines = output.split("\n")
         for line in lines:
             if "test_map_at_k" in line:
@@ -270,55 +270,55 @@ class ExperimentRunner:
         return results
     
     def run_all_experiments(self) -> pd.DataFrame:
-        """Run all defined experiments.
+        """정의된 모든 실험 실행.
         
         Returns:
-            DataFrame with all results
+            모든 결과가 있는 DataFrame
         """
-        logger.info(f"Starting {len(self.experiments)} experiments")
-        logger.info(f"Results will be saved to: {self.experiment_dir}")
+        logger.info(f"{len(self.experiments)}개의 실험 시작")
+        logger.info(f"결과는 다음 경로에 저장됨: {self.experiment_dir}")
         
         all_results = []
         
         for i, experiment in enumerate(self.experiments):
             logger.info(f"\n{'='*60}")
-            logger.info(f"Experiment {i+1}/{len(self.experiments)}: {experiment['name']}")
+            logger.info(f"실험 {i+1}/{len(self.experiments)}: {experiment['name']}")
             logger.info(f"{'='*60}")
             
             results = self.run_experiment(experiment)
             all_results.append(results)
             
-            # Save intermediate results
+            # 중간 결과 저장
             df = pd.DataFrame(all_results)
             df.to_csv(self.experiment_dir / "results_intermediate.csv", index=False)
         
-        # Create final results DataFrame
+        # 최종 결과 DataFrame 생성
         results_df = pd.DataFrame(all_results)
         results_df.to_csv(self.experiment_dir / "results_final.csv", index=False)
         
-        logger.info("\nAll experiments completed!")
+        logger.info("\n모든 실험 완료!")
         return results_df
     
     def create_visualizations(self, results_df: pd.DataFrame):
-        """Create visualization plots for experiment results.
+        """실험 결과를 위한 시각화 플롯 생성.
         
         Args:
-            results_df: DataFrame with experiment results
+            results_df: 실험 결과가 있는 DataFrame
         """
-        logger.info("Creating visualizations...")
+        logger.info("시각화 생성 중...")
         
-        # Filter successful experiments
+        # 성공한 실험 필터링
         success_df = results_df[results_df["status"] == "success"].copy()
         
         if len(success_df) == 0:
-            logger.warning("No successful experiments to visualize")
+            logger.warning("시각화할 성공한 실험이 없음")
             return
         
-        # Set style
+        # 스타일 설정
         plt.style.use('seaborn-v0_8-darkgrid')
         sns.set_palette("husl")
         
-        # 1. Overall performance comparison
+        # 1. 전체 성능 비교
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         
         metrics = ["test_map_at_k", "test_recall_at_k", "test_precision", "test_ndcg_at_k"]
@@ -329,12 +329,12 @@ class ExperimentRunner:
                 data = success_df[["name", metric]].dropna()
                 if len(data) > 0:
                     ax.bar(data["name"], data[metric])
-                    ax.set_title(f"{title} Comparison", fontsize=14)
-                    ax.set_xlabel("Model", fontsize=12)
+                    ax.set_title(f"{title} 비교", fontsize=14)
+                    ax.set_xlabel("모델", fontsize=12)
                     ax.set_ylabel(title, fontsize=12)
                     ax.tick_params(axis='x', rotation=45)
                     
-                    # Add value labels
+                    # 값 레이블 추가
                     for i, v in enumerate(data[metric]):
                         ax.text(i, v + 0.001, f'{v:.4f}', ha='center', va='bottom')
         
@@ -342,14 +342,14 @@ class ExperimentRunner:
         plt.savefig(self.experiment_dir / "performance_comparison.png", dpi=300)
         plt.close()
         
-        # 2. Training time comparison
+        # 2. 학습 시간 비교
         if "duration" in success_df.columns:
             plt.figure(figsize=(12, 6))
             success_df["duration_min"] = success_df["duration"] / 60
             ax = sns.barplot(data=success_df, x="name", y="duration_min")
-            plt.title("Training Time Comparison", fontsize=14)
-            plt.xlabel("Model", fontsize=12)
-            plt.ylabel("Training Time (minutes)", fontsize=12)
+            plt.title("학습 시간 비교", fontsize=14)
+            plt.xlabel("모델", fontsize=12)
+            plt.ylabel("학습 시간 (분)", fontsize=12)
             plt.xticks(rotation=45)
             
             # Add value labels
@@ -362,13 +362,13 @@ class ExperimentRunner:
             plt.savefig(self.experiment_dir / "training_time_comparison.png", dpi=300)
             plt.close()
         
-        # 3. Create summary table
+        # 3. 요약 테이블 생성
         if "test_map_at_k" in success_df.columns:
             summary_metrics = ["test_map_at_k", "test_recall_at_k", "test_ndcg_at_k", "duration_min"]
             summary_df = success_df[["name", "model"] + 
                                   [m for m in summary_metrics if m in success_df.columns]]
             
-            # Round numerical values
+            # 숫자값 반올림
             for col in summary_metrics:
                 if col in summary_df.columns:
                     if col == "duration_min":
@@ -376,49 +376,49 @@ class ExperimentRunner:
                     else:
                         summary_df[col] = summary_df[col].round(4)
             
-            # Sort by MAP@12
+            # MAP@12로 정렬
             if "test_map_at_k" in summary_df.columns:
                 summary_df = summary_df.sort_values("test_map_at_k", ascending=False)
             
-            # Save as markdown table
+            # 마크다운 테이블로 저장
             with open(self.experiment_dir / "summary_table.md", "w") as f:
-                f.write("# Model Performance Summary\n\n")
+                f.write("# 모델 성능 요약\n\n")
                 f.write(summary_df.to_markdown(index=False))
         
-        logger.info(f"Visualizations saved to: {self.experiment_dir}")
+        logger.info(f"시각화 저장 경로: {self.experiment_dir}")
     
     def create_report(self, results_df: pd.DataFrame):
-        """Create a comprehensive experiment report.
+        """포괄적인 실험 보고서 생성.
         
         Args:
-            results_df: DataFrame with experiment results
+            results_df: 실험 결과가 있는 DataFrame
         """
-        logger.info("Creating experiment report...")
+        logger.info("실험 보고서 생성 중...")
         
         report_path = self.experiment_dir / "experiment_report.md"
         
         with open(report_path, "w") as f:
-            f.write(f"# H&M Recommendation Model Comparison Report\n\n")
-            f.write(f"**Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"**Sample Fraction**: {self.sample_fraction}\n")
-            f.write(f"**Quick Test**: {self.quick_test}\n\n")
+            f.write(f"# H&M 추천 모델 비교 보고서\n\n")
+            f.write(f"**날짜**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"**샘플 비율**: {self.sample_fraction}\n")
+            f.write(f"**빠른 테스트**: {self.quick_test}\n\n")
             
-            # Summary statistics
+            # 요약 통계
             success_df = results_df[results_df["status"] == "success"]
-            f.write(f"## Summary\n\n")
-            f.write(f"- Total experiments: {len(results_df)}\n")
-            f.write(f"- Successful: {len(success_df)}\n")
-            f.write(f"- Failed: {len(results_df) - len(success_df)}\n\n")
+            f.write(f"## 요약\n\n")
+            f.write(f"- 전체 실험: {len(results_df)}\n")
+            f.write(f"- 성공: {len(success_df)}\n")
+            f.write(f"- 실패: {len(results_df) - len(success_df)}\n\n")
             
-            # Best performing model
+            # 최고 성능 모델
             if len(success_df) > 0 and "test_map_at_k" in success_df.columns:
                 best_model = success_df.loc[success_df["test_map_at_k"].idxmax()]
-                f.write(f"## Best Performing Model\n\n")
-                f.write(f"**{best_model['name']}** achieved the highest MAP@12: {best_model['test_map_at_k']:.4f}\n\n")
+                f.write(f"## 최고 성능 모델\n\n")
+                f.write(f"**{best_model['name']}**이(가) 최고 MAP@12 달성: {best_model['test_map_at_k']:.4f}\n\n")
             
-            # Performance table
+            # 성능 테이블
             if len(success_df) > 0:
-                f.write(f"## Performance Comparison\n\n")
+                f.write(f"## 성능 비교\n\n")
                 summary_cols = ["name", "test_map_at_k", "test_recall_at_k", "test_ndcg_at_k"]
                 summary_cols = [col for col in summary_cols if col in success_df.columns]
                 
@@ -429,55 +429,55 @@ class ExperimentRunner:
                     f.write(summary_df.to_markdown(index=False))
                     f.write("\n\n")
             
-            # Failed experiments
+            # 실패한 실험
             failed_df = results_df[results_df["status"] == "failed"]
             if len(failed_df) > 0:
-                f.write(f"## Failed Experiments\n\n")
+                f.write(f"## 실패한 실험\n\n")
                 for _, row in failed_df.iterrows():
-                    f.write(f"- **{row['name']}**: {row.get('error', 'Unknown error')}\n")
+                    f.write(f"- **{row['name']}**: {row.get('error', '알 수 없는 오류')}\n")
                 f.write("\n")
             
-            # Recommendations
-            f.write(f"## Recommendations\n\n")
+            # 권장사항
+            f.write(f"## 권장사항\n\n")
             if len(success_df) > 0 and "test_map_at_k" in success_df.columns:
                 top_models = success_df.nlargest(3, "test_map_at_k")
-                f.write("Based on the experiments, the top 3 models are:\n\n")
+                f.write("실험 결과에 따른 상위 3개 모델:\n\n")
                 for i, (_, model) in enumerate(top_models.iterrows(), 1):
                     f.write(f"{i}. **{model['name']}**: MAP@12 = {model['test_map_at_k']:.4f}\n")
             
-        logger.info(f"Report saved to: {report_path}")
+        logger.info(f"보고서 저장 경로: {report_path}")
 
 
 def main():
-    """Main function to run experiments."""
+    """실험을 실행하는 메인 함수."""
     import argparse
     
-    parser = argparse.ArgumentParser(description="Run H&M recommendation model experiments")
+    parser = argparse.ArgumentParser(description="H&M 추천 모델 실험 실행")
     parser.add_argument("--sample-fraction", type=float, default=0.1,
-                       help="Fraction of data to use (default: 0.1)")
+                       help="사용할 데이터 비율 (기본값: 0.1)")
     parser.add_argument("--quick-test", action="store_true",
-                       help="Run quick tests with fewer epochs")
+                       help="적은 epoch로 빠른 테스트 실행")
     parser.add_argument("--experiments-dir", type=str, default="experiments",
-                       help="Base directory for experiments (default: experiments)")
+                       help="실험을 위한 기본 디렉토리 (기본값: experiments)")
     
     args = parser.parse_args()
     
-    # Create experiment runner
+    # 실험 러너 생성
     runner = ExperimentRunner(
         base_dir=args.experiments_dir,
         sample_fraction=args.sample_fraction,
         quick_test=args.quick_test
     )
     
-    # Run all experiments
+    # 모든 실험 실행
     results_df = runner.run_all_experiments()
     
-    # Create visualizations and report
+    # 시각화 및 보고서 생성
     runner.create_visualizations(results_df)
     runner.create_report(results_df)
     
-    logger.info("\nExperiment comparison completed!")
-    logger.info(f"Results saved to: {runner.experiment_dir}")
+    logger.info("\n실험 비교 완료!")
+    logger.info(f"결과 저장 경로: {runner.experiment_dir}")
 
 
 if __name__ == "__main__":

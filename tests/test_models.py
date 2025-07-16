@@ -1,4 +1,4 @@
-"""Test cases for recommendation models."""
+"""추천 모델에 대한 테스트 케이스."""
 import pytest
 import torch
 import torch.nn as nn
@@ -13,7 +13,7 @@ from src.models import (
 
 @pytest.fixture
 def model_config():
-    """Common model configuration."""
+    """공통 모델 설정."""
     return {
         'num_users': 100,
         'num_items': 50,
@@ -23,17 +23,17 @@ def model_config():
 
 
 class TestMatrixFactorization:
-    """Test Matrix Factorization model."""
+    """행렬 분해 모델 테스트."""
     
     def test_model_initialization(self, model_config):
-        """Test model initialization."""
+        """모델 초기화 테스트."""
         model = MatrixFactorization(**model_config)
         assert model.num_users == 100
         assert model.num_items == 50
         assert model.embedding_dim == 16
     
     def test_forward_pass(self, model_config):
-        """Test forward pass."""
+        """순전파 테스트."""
         model = MatrixFactorization(**model_config)
         
         batch_size = 10
@@ -44,7 +44,7 @@ class TestMatrixFactorization:
         assert predictions.shape == (batch_size,)
     
     def test_predict_all_items(self, model_config):
-        """Test prediction for all items."""
+        """모든 아이템에 대한 예측 테스트."""
         model = MatrixFactorization(**model_config)
         
         batch_size = 5
@@ -54,7 +54,7 @@ class TestMatrixFactorization:
         assert scores.shape == (batch_size, 50)
     
     def test_recommend(self, model_config):
-        """Test recommendation generation."""
+        """추천 생성 테스트."""
         model = MatrixFactorization(**model_config)
         
         user_ids = torch.tensor([0, 1, 2])
@@ -66,10 +66,10 @@ class TestMatrixFactorization:
 
 
 class TestNeuralCF:
-    """Test Neural Collaborative Filtering model."""
+    """신경망 협업 필터링 모델 테스트."""
     
     def test_model_initialization(self, model_config):
-        """Test model initialization."""
+        """모델 초기화 테스트."""
         config = model_config.copy()
         config['mlp_dims'] = [32, 16, 8]
         model = NeuralCF(**config)
@@ -79,7 +79,7 @@ class TestNeuralCF:
         assert len(model.mlp_layers) > 0
     
     def test_forward_pass(self, model_config):
-        """Test forward pass."""
+        """순전파 테스트."""
         config = model_config.copy()
         config['mlp_dims'] = [32, 16, 8]
         model = NeuralCF(**config)
@@ -92,7 +92,7 @@ class TestNeuralCF:
         assert predictions.shape == (batch_size,)
     
     def test_mlp_architecture(self):
-        """Test MLP architecture construction."""
+        """MLP 아키텍처 구성 테스트."""
         model = NeuralCF(
             num_users=100,
             num_items=50,
@@ -101,7 +101,7 @@ class TestNeuralCF:
             top_k=5
         )
         
-        # Check MLP layers
+        # MLP 레이어 확인
         linear_layers = [m for m in model.mlp_layers if isinstance(m, nn.Linear)]
         assert len(linear_layers) == 3
         assert linear_layers[0].in_features == 64
@@ -109,10 +109,10 @@ class TestNeuralCF:
 
 
 class TestWideDeep:
-    """Test Wide & Deep model."""
+    """Wide & Deep 모델 테스트."""
     
     def test_model_initialization(self, model_config):
-        """Test model initialization."""
+        """모델 초기화 테스트."""
         config = model_config.copy()
         config['deep_layers'] = [128, 64, 32]
         model = WideDeep(**config)
@@ -122,7 +122,7 @@ class TestWideDeep:
         assert model.use_wide_user_item == True
     
     def test_forward_pass_without_features(self, model_config):
-        """Test forward pass without additional features."""
+        """추가 특성 없이 순전파 테스트."""
         config = model_config.copy()
         config['deep_layers'] = [64, 32]
         model = WideDeep(**config)
@@ -135,7 +135,7 @@ class TestWideDeep:
         assert predictions.shape == (batch_size,)
     
     def test_forward_pass_with_features(self):
-        """Test forward pass with additional features."""
+        """추가 특성과 함께 순전파 테스트."""
         model = WideDeep(
             num_users=100,
             num_items=50,
@@ -157,10 +157,10 @@ class TestWideDeep:
 
 
 class TestLightGCN:
-    """Test LightGCN model."""
+    """LightGCN 모델 테스트."""
     
     def test_model_initialization(self, model_config):
-        """Test model initialization."""
+        """모델 초기화 테스트."""
         config = model_config.copy()
         config['num_layers'] = 3
         model = LightGCN(**config)
@@ -171,13 +171,13 @@ class TestLightGCN:
         assert len(model.alpha) == 4  # num_layers + 1
     
     def test_graph_setup(self, model_config):
-        """Test graph setup."""
+        """그래프 설정 테스트."""
         model = LightGCN(**model_config)
         
-        # Create a simple bipartite graph
+        # 간단한 이분 그래프 생성
         num_edges = 200
         user_ids = torch.randint(0, 100, (num_edges,))
-        item_ids = torch.randint(0, 50, (num_edges,)) + 100  # Offset for items
+        item_ids = torch.randint(0, 50, (num_edges,)) + 100  # 아이템에 대한 오프셋
         
         edge_index = torch.stack([
             torch.cat([user_ids, item_ids]),
@@ -188,10 +188,10 @@ class TestLightGCN:
         assert model.graph is not None
     
     def test_forward_with_graph(self, model_config):
-        """Test forward pass with graph."""
+        """그래프와 함께 순전파 테스트."""
         model = LightGCN(**model_config)
         
-        # Set up graph
+        # 그래프 설정
         num_edges = 200
         user_ids = torch.randint(0, 100, (num_edges,))
         item_ids = torch.randint(0, 50, (num_edges,)) + 100
@@ -203,16 +203,16 @@ class TestLightGCN:
         
         model.set_graph(edge_index)
         
-        # Forward pass
+        # 순전파
         user_embeddings, item_embeddings = model.forward()
         assert user_embeddings.shape == (100, 16)
         assert item_embeddings.shape == (50, 16)
     
     def test_bpr_loss(self, model_config):
-        """Test BPR loss computation."""
+        """BPR 손실 계산 테스트."""
         model = LightGCN(**model_config)
         
-        # Set up graph
+        # 그래프 설정
         num_edges = 200
         user_ids = torch.randint(0, 100, (num_edges,))
         item_ids = torch.randint(0, 50, (num_edges,)) + 100
@@ -224,7 +224,7 @@ class TestLightGCN:
         
         model.set_graph(edge_index)
         
-        # Compute BPR loss
+        # BPR 손실 계산
         batch_size = 32
         batch_users = torch.randint(0, 100, (batch_size,))
         pos_items = torch.randint(0, 50, (batch_size,))
@@ -232,4 +232,4 @@ class TestLightGCN:
         
         loss = model.bpr_loss(batch_users, pos_items, neg_items)
         assert isinstance(loss, torch.Tensor)
-        assert loss.dim() == 0  # Scalar
+        assert loss.dim() == 0  # 스칼라

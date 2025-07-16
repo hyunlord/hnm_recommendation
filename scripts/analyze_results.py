@@ -45,7 +45,7 @@ class ExperimentAnalyzer:
         # Find all experiment directories
         for exp_dir in self.experiments_dir.glob("*"):
             if exp_dir.is_dir():
-                # Load results from each model directory
+                # 결과 로드 from each model directory
                 for model_dir in exp_dir.glob("*"):
                     if model_dir.is_dir():
                         result = self._load_single_result(model_dir)
@@ -635,7 +635,7 @@ def main():
     # Initialize analyzer
     analyzer = ExperimentAnalyzer(args.experiments_dir)
     
-    # Load results
+    # 결과 로드
     print("Loading experiment results...")
     results_df = analyzer.load_all_results()
     

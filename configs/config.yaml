@@ -1,4 +1,4 @@
-# Main configuration file for H&M Recommendation System
+# H&M 추천 시스템 메인 설정 파일
 
 defaults:
   - data: default
@@ -6,16 +6,16 @@ defaults:
   - training: default
   - _self_
 
-# Project settings
+# 프로젝트 설정
 project:
   name: "hnm_recommendation"
   seed: 42
-  device: "cuda" # or "cpu"
+  device: "cuda" # 또는 "cpu"
   
-# Run name for tracking
+# 추적을 위한 실행 이름
 run_name: "${model.name}_${now:%Y%m%d_%H%M%S}"
   
-# Paths
+# 경로 설정
 paths:
   data_dir: "data"
   output_dir: "experiments"
@@ -23,32 +23,32 @@ paths:
   log_dir: "${paths.output_dir}/logs"
   results_dir: "${paths.output_dir}/results"
   
-# Data settings
+# 데이터 설정
 data:
-  train_weeks: 104  # Number of weeks for training
-  val_weeks: 1      # Number of weeks for validation
-  test_weeks: 1     # Number of weeks for testing
+  train_weeks: 104  # 학습용 주 수
+  val_weeks: 1      # 검증용 주 수
+  test_weeks: 1     # 테스트용 주 수
   min_user_interactions: 5
   min_item_interactions: 5
-  sample_size: null  # null for full data, or number for sampling
+  sample_size: null  # null이면 전체 데이터, 또는 샘플링할 숫자
   negative_sampling_ratio: 4
   sample_fraction: 1.0
-  use_improved_datamodule: true  # Use improved data module
-  dataset_type: "standard"  # Options: standard, bpr, temporal
-  sampling_strategy: "uniform"  # Options: uniform, popularity, hard
-  cache_negatives: true  # Cache negative samples for efficiency
-  temporal_window_days: 7  # Window for temporal features
-  augment_data: false  # Data augmentation
-  normalize_features: true  # Normalize numerical features
+  use_improved_datamodule: true  # 개선된 데이터 모듈 사용
+  dataset_type: "standard"  # 옵션: standard, bpr, temporal
+  sampling_strategy: "uniform"  # 옵션: uniform, popularity, hard
+  cache_negatives: true  # 효율성을 위한 네거티브 샘플 캐싱
+  temporal_window_days: 7  # 시간적 특성을 위한 윈도우
+  augment_data: false  # 데이터 증강
+  normalize_features: true  # 수치 특성 정규화
   
-# Model settings
+# 모델 설정
 model:
   name: "neural_cf"
   embedding_dim: 64
   hidden_dims: [128, 64, 32]
   dropout: 0.2
   
-# Training settings
+# 학습 설정
 training:
   batch_size: 1024
   epochs: 50
@@ -62,18 +62,18 @@ training:
   accumulate_grad_batches: 1
   val_check_interval: 1.0
   
-# Evaluation settings
+# 평가 설정
 evaluation:
   k_values: [5, 10, 12, 20]
   metrics: ["map", "recall", "precision", "ndcg"]
   
-# Logging settings
+# 로깅 설정
 logging:
   enabled: true
-  logger: "tensorboard"  # Options: tensorboard, wandb, mlflow
+  logger: "tensorboard"  # 옵션: tensorboard, wandb, mlflow
   log_every_n_steps: 100
   
-# Hydra settings
+# Hydra 설정
 hydra:
   run:
     dir: ${paths.output_dir}/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}

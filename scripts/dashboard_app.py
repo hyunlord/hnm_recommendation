@@ -1,4 +1,4 @@
-"""Interactive dashboard app for experiment monitoring using Streamlit."""
+"""Streamlit을 사용한 실험 모니터링을 위한 대화형 대시보드 앱."""
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,15 +11,15 @@ import json
 from datetime import datetime
 import time
 
-# Page config
+# 페이지 설정
 st.set_page_config(
-    page_title="H&M Recommendation Dashboard",
+    page_title="H&M 추천 대시보드",
     page_icon="👔",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# 커스텀 CSS
 st.markdown("""
 <style>
     .main {
@@ -46,7 +46,7 @@ st.markdown("""
 
 @st.cache_data(ttl=60)
 def load_experiment_results(experiments_dir: Path) -> pd.DataFrame:
-    """Load all experiment results with caching."""
+    """캐싱과 함께 모든 실험 결과 로드."""
     all_results = []
     
     for exp_dir in experiments_dir.glob("*"):
@@ -61,21 +61,21 @@ def load_experiment_results(experiments_dir: Path) -> pd.DataFrame:
     
     df = pd.DataFrame(all_results)
     
-    # Process results
+    # 결과 처리
     if len(df) > 0:
         if 'test_map' in df.columns:
             df['MAP@12'] = df['test_map']
         elif 'test_map_at_k' in df.columns:
             df['MAP@12'] = df['test_map_at_k']
         
-        # Extract timestamp
+        # 타임스탬프 추출
         df['timestamp'] = pd.to_datetime(
             df['experiment'].str.extract(r'(\d{8}_\d{6})')[0],
             format='%Y%m%d_%H%M%S',
             errors='coerce'
         )
         
-        # Model type
+        # 모델 타입
         df['model_type'] = df['model'].apply(
             lambda x: x.split('_')[0] if '_' in x else x
         )
@@ -84,10 +84,10 @@ def load_experiment_results(experiments_dir: Path) -> pd.DataFrame:
 
 
 def load_single_result(model_dir: Path) -> dict:
-    """Load result from a single model directory."""
+    """단일 모델 디렉토리에서 결과 로드."""
     result = {'model': model_dir.name}
     
-    # Try different result file formats
+    # 다른 결과 파일 형식 시도
     results_files = list(model_dir.glob("*_results.yaml"))
     if results_files:
         with open(results_files[0], 'r') as f:
@@ -102,53 +102,53 @@ def load_single_result(model_dir: Path) -> dict:
 
 
 def main():
-    """Main dashboard application."""
-    st.title("🛍️ H&M Recommendation System Dashboard")
-    st.markdown("Real-time monitoring and analysis of recommendation model experiments")
+    """메인 대시보드 애플리케이션."""
+    st.title("🛍️ H&M 추천 시스템 대시보드")
+    st.markdown("추천 모델 실험의 실시간 모니터링 및 분석")
     
-    # Sidebar
+    # 사이드바
     with st.sidebar:
-        st.header("Configuration")
+        st.header("설정")
         
-        # Experiment directory
+        # 실험 디렉토리
         experiments_dir = st.text_input(
-            "Experiments Directory",
+            "실험 디렉토리",
             value="experiments",
-            help="Path to experiments directory"
+            help="실험 디렉토리 경로"
         )
         experiments_path = Path(experiments_dir)
         
-        # Refresh button
-        if st.button("🔄 Refresh Data"):
+        # 새로고침 버튼
+        if st.button("🔄 데이터 새로고침"):
             st.cache_data.clear()
             st.experimental_rerun()
         
-        # Auto-refresh
-        auto_refresh = st.checkbox("Auto-refresh (60s)", value=False)
+        # 자동 새로고침
+        auto_refresh = st.checkbox("자동 새로고침 (60초)", value=False)
         if auto_refresh:
             time.sleep(60)
             st.experimental_rerun()
     
-    # Load data
+    # 데이터 로드
     if not experiments_path.exists():
-        st.error(f"Experiments directory not found: {experiments_path}")
+        st.error(f"실험 디렉토리를 찾을 수 없습니다: {experiments_path}")
         return
     
-    with st.spinner("Loading experiment results..."):
+    with st.spinner("실험 결과 로드 중..."):
         results_df = load_experiment_results(experiments_path)
     
     if len(results_df) == 0:
-        st.warning("No experiment results found!")
-        st.info("Run some experiments first using `python scripts/train.py` or `python scripts/run_experiments.py`")
+        st.warning("실험 결과를 찾을 수 없습니다!")
+        st.info("먼저 `python scripts/train.py` 또는 `python scripts/run_experiments.py`를 사용하여 실험을 실행하세요")
         return
     
-    # Main content
+    # 메인 콘텐츠
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Overview", 
-        "📈 Performance Analysis", 
-        "🔬 Model Comparison",
-        "📉 Training Progress",
-        "📋 Detailed Results"
+        "📊 개요", 
+        "📈 성능 분석", 
+        "🔬 모델 비교",
+        "📉 학습 진행 상황",
+        "📋 상세 결과"
     ])
     
     with tab1:
@@ -168,29 +168,29 @@ def main():
 
 
 def display_overview(df: pd.DataFrame):
-    """Display overview metrics and statistics."""
-    st.header("Overview")
+    """개요 메트릭 및 통계 표시."""
+    st.header("개요")
     
-    # Key metrics
+    # 주요 메트릭
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric(
-            "Total Experiments",
+            "전체 실험",
             len(df),
             delta=None
         )
     
     with col2:
         st.metric(
-            "Best MAP@12",
+            "최고 MAP@12",
             f"{df['MAP@12'].max():.4f}" if 'MAP@12' in df.columns else "N/A",
             delta=None
         )
     
     with col3:
         st.metric(
-            "Unique Models",
+            "고유 모델",
             df['model_type'].nunique() if 'model_type' in df.columns else 0,
             delta=None
         )
@@ -198,34 +198,34 @@ def display_overview(df: pd.DataFrame):
     with col4:
         latest_exp = df['timestamp'].max() if 'timestamp' in df.columns else None
         st.metric(
-            "Latest Experiment",
+            "최신 실험",
             latest_exp.strftime("%Y-%m-%d %H:%M") if pd.notna(latest_exp) else "N/A",
             delta=None
         )
     
-    # Best performing models
-    st.subheader("🏆 Top Performing Models")
+    # 최고 성능 모델
+    st.subheader("🏆 상위 성능 모델")
     
     if 'MAP@12' in df.columns:
         top_models = df.nlargest(5, 'MAP@12')[['model', 'MAP@12', 'model_type']]
         
-        # Create bar chart
+        # 막대 차트 생성
         fig = px.bar(
             top_models,
             x='MAP@12',
             y='model',
             orientation='h',
             color='model_type',
-            title="Top 5 Models by MAP@12",
-            labels={'MAP@12': 'MAP@12', 'model': 'Model'},
+            title="MAP@12 기준 상위 5개 모델",
+            labels={'MAP@12': 'MAP@12', 'model': '모델'},
             text='MAP@12'
         )
         fig.update_traces(texttemplate='%{text:.4f}', textposition='outside')
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
     
-    # Recent experiments
-    st.subheader("📅 Recent Experiments")
+    # 최근 실험
+    st.subheader("📅 최근 실험")
     if 'timestamp' in df.columns:
         recent = df.nlargest(10, 'timestamp')[['timestamp', 'model', 'MAP@12']]
         recent['timestamp'] = recent['timestamp'].dt.strftime('%Y-%m-%d %H:%M')
@@ -233,30 +233,30 @@ def display_overview(df: pd.DataFrame):
 
 
 def display_performance_analysis(df: pd.DataFrame):
-    """Display performance analysis visualizations."""
-    st.header("Performance Analysis")
+    """성능 분석 시각화 표시."""
+    st.header("성능 분석")
     
     if 'MAP@12' not in df.columns:
-        st.warning("No performance metrics found")
+        st.warning("성능 메트릭을 찾을 수 없습니다")
         return
     
-    # Model type comparison
+    # 모델 타입 비교
     col1, col2 = st.columns(2)
     
     with col1:
-        # Box plot by model type
+        # 모델 타입별 박스 플롯
         fig = px.box(
             df,
             x='model_type',
             y='MAP@12',
-            title="Performance Distribution by Model Type",
+            title="모델 타입별 성능 분포",
             points="all"
         )
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        # Average performance by model type
+        # 모델 타입별 평균 성능
         avg_perf = df.groupby('model_type')['MAP@12'].agg(['mean', 'std', 'count']).reset_index()
         
         fig = go.Figure()
@@ -267,21 +267,21 @@ def display_performance_analysis(df: pd.DataFrame):
             text=avg_perf['count'],
             texttemplate='n=%{text}',
             textposition='outside',
-            name='Mean MAP@12'
+            name='평균 MAP@12'
         ))
         fig.update_layout(
-            title="Average Performance by Model Type",
-            xaxis_title="Model Type",
+            title="모델 타입별 평균 성능",
+            xaxis_title="모델 타입",
             yaxis_title="MAP@12",
             height=400
         )
         st.plotly_chart(fig, use_container_width=True)
     
-    # Performance over time
+    # 시간에 따른 성능
     if 'timestamp' in df.columns and pd.notna(df['timestamp']).any():
-        st.subheader("Performance Over Time")
+        st.subheader("시간에 따른 성능")
         
-        # Group by date and model type
+        # 날짜 및 모델 타입별로 그룹화
         df['date'] = df['timestamp'].dt.date
         time_perf = df.groupby(['date', 'model_type'])['MAP@12'].mean().reset_index()
         
@@ -290,59 +290,59 @@ def display_performance_analysis(df: pd.DataFrame):
             x='date',
             y='MAP@12',
             color='model_type',
-            title="Performance Trends Over Time",
+            title="시간에 따른 성능 추세",
             markers=True
         )
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
     
-    # Metric correlations
+    # 메트릭 상관관계
     metrics = ['MAP@12', 'test_recall', 'test_precision', 'test_ndcg']
     available_metrics = [m for m in metrics if m in df.columns]
     
     if len(available_metrics) > 1:
-        st.subheader("Metric Correlations")
+        st.subheader("메트릭 상관관계")
         
         corr_matrix = df[available_metrics].corr()
         
         fig = px.imshow(
             corr_matrix,
-            labels=dict(color="Correlation"),
+            labels=dict(color="상관관계"),
             x=available_metrics,
             y=available_metrics,
             color_continuous_scale='RdBu',
             aspect="auto",
-            title="Correlation Matrix of Evaluation Metrics"
+            title="평가 메트릭 상관관계 행렬"
         )
         fig.update_traces(text=corr_matrix.values.round(3), texttemplate='%{text}')
         st.plotly_chart(fig, use_container_width=True)
 
 
 def display_model_comparison(df: pd.DataFrame):
-    """Display detailed model comparison."""
-    st.header("Model Comparison")
+    """상세한 모델 비교 표시."""
+    st.header("모델 비교")
     
-    # Model selection
+    # 모델 선택
     available_models = df['model'].unique()
     selected_models = st.multiselect(
-        "Select models to compare",
+        "비교할 모델 선택",
         available_models,
         default=list(df.nlargest(5, 'MAP@12')['model']) if 'MAP@12' in df.columns else []
     )
     
     if not selected_models:
-        st.info("Select models to compare")
+        st.info("비교할 모델을 선택하세요")
         return
     
-    # Filter data
+    # 데이터 필터링
     comparison_df = df[df['model'].isin(selected_models)]
     
-    # Radar chart
+    # 레이더 차트
     metrics = ['MAP@12', 'test_recall', 'test_precision', 'test_ndcg']
     available_metrics = [m for m in metrics if m in comparison_df.columns]
     
     if len(available_metrics) >= 3:
-        st.subheader("Multi-Metric Comparison")
+        st.subheader("다중 메트릭 비교")
         
         fig = go.Figure()
         
@@ -365,23 +365,23 @@ def display_model_comparison(df: pd.DataFrame):
                 )
             ),
             showlegend=True,
-            title="Model Performance Radar Chart"
+            title="모델 성능 레이더 차트"
         )
         st.plotly_chart(fig, use_container_width=True)
     
-    # Side-by-side comparison
-    st.subheader("Side-by-Side Comparison")
+    # 나란히 비교
+    st.subheader("나란히 비교")
     
     comparison_metrics = ['MAP@12'] + [m for m in ['test_recall', 'test_precision', 'test_ndcg'] 
                                       if m in comparison_df.columns]
     
     if 'duration' in comparison_df.columns:
-        comparison_df['Training Time (min)'] = comparison_df['duration'] / 60
-        comparison_metrics.append('Training Time (min)')
+        comparison_df['학습 시간 (분)'] = comparison_df['duration'] / 60
+        comparison_metrics.append('학습 시간 (분)')
     
     comparison_table = comparison_df[['model'] + comparison_metrics].set_index('model')
     
-    # Create heatmap
+    # 히트맵 생성
     fig = go.Figure(data=go.Heatmap(
         z=comparison_table.values,
         x=comparison_table.columns,
@@ -393,113 +393,113 @@ def display_model_comparison(df: pd.DataFrame):
     ))
     
     fig.update_layout(
-        title="Model Comparison Heatmap",
-        xaxis_title="Metrics",
-        yaxis_title="Models",
+        title="모델 비교 히트맵",
+        xaxis_title="메트릭",
+        yaxis_title="모델",
         height=400
     )
     st.plotly_chart(fig, use_container_width=True)
 
 
 def display_training_progress(df: pd.DataFrame, experiments_dir: Path):
-    """Display training progress and curves."""
-    st.header("Training Progress")
+    """학습 진행 상황 및 곡선 표시."""
+    st.header("학습 진행 상황")
     
-    # Select model
+    # 모델 선택
     model_options = df['model'].unique()
-    selected_model = st.selectbox("Select model to view training progress", model_options)
+    selected_model = st.selectbox("학습 진행 상황을 볼 모델 선택", model_options)
     
     if not selected_model:
         return
     
-    # Find log files
+    # 로그 파일 찾기
     model_data = df[df['model'] == selected_model].iloc[0]
     model_path = Path(model_data['model_path'])
     
-    # Look for tensorboard logs or CSV metrics
+    # 텐서보드 로그 또는 CSV 메트릭 찾기
     log_files = list(model_path.glob("**/metrics.csv")) + list(model_path.glob("**/training_log.csv"))
     
     if not log_files:
-        st.info("No training logs found for this model")
+        st.info("이 모델에 대한 학습 로그를 찾을 수 없습니다")
         return
     
-    # Load training data
+    # 학습 데이터 로드
     try:
         train_log = pd.read_csv(log_files[0])
         
-        # Create subplots
+        # 서브플롯 생성
         fig = make_subplots(
             rows=2, cols=2,
-            subplot_titles=('Training Loss', 'Validation Loss', 'Validation MAP@12', 'Learning Rate')
+            subplot_titles=('학습 손실', '검증 손실', '검증 MAP@12', '학습률')
         )
         
-        # Training loss
+        # 학습 손실
         if 'train_loss' in train_log.columns:
             fig.add_trace(
-                go.Scatter(x=train_log.index, y=train_log['train_loss'], name='Train Loss'),
+                go.Scatter(x=train_log.index, y=train_log['train_loss'], name='학습 손실'),
                 row=1, col=1
             )
         
-        # Validation loss
+        # 검증 손실
         if 'val_loss' in train_log.columns:
             fig.add_trace(
-                go.Scatter(x=train_log.index, y=train_log['val_loss'], name='Val Loss'),
+                go.Scatter(x=train_log.index, y=train_log['val_loss'], name='검증 손실'),
                 row=1, col=2
             )
         
-        # Validation MAP
+        # 검증 MAP
         if 'val_map_at_k' in train_log.columns:
             fig.add_trace(
-                go.Scatter(x=train_log.index, y=train_log['val_map_at_k'], name='Val MAP@12'),
+                go.Scatter(x=train_log.index, y=train_log['val_map_at_k'], name='검증 MAP@12'),
                 row=2, col=1
             )
         
-        # Learning rate
+        # 학습률
         if 'lr' in train_log.columns:
             fig.add_trace(
-                go.Scatter(x=train_log.index, y=train_log['lr'], name='Learning Rate'),
+                go.Scatter(x=train_log.index, y=train_log['lr'], name='학습률'),
                 row=2, col=2
             )
         
-        fig.update_layout(height=800, title=f"Training Progress - {selected_model}")
+        fig.update_layout(height=800, title=f"학습 진행 상황 - {selected_model}")
         st.plotly_chart(fig, use_container_width=True)
         
     except Exception as e:
-        st.error(f"Error loading training logs: {e}")
+        st.error(f"학습 로그 로드 오류: {e}")
 
 
 def display_detailed_results(df: pd.DataFrame):
-    """Display detailed results table."""
-    st.header("Detailed Results")
+    """상세 결과 테이블 표시."""
+    st.header("상세 결과")
     
-    # Filters
+    # 필터
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        model_types = ['All'] + list(df['model_type'].unique())
-        selected_type = st.selectbox("Filter by model type", model_types)
+        model_types = ['전체'] + list(df['model_type'].unique())
+        selected_type = st.selectbox("모델 타입별 필터", model_types)
     
     with col2:
         sort_by = st.selectbox(
-            "Sort by",
+            "정렬 기준",
             ['MAP@12', 'model', 'timestamp'] + 
             [col for col in ['test_recall', 'test_precision', 'test_ndcg'] if col in df.columns],
             index=0
         )
     
     with col3:
-        ascending = st.checkbox("Ascending order", value=False)
+        ascending = st.checkbox("오름차순 정렬", value=False)
     
-    # Filter data
+    # 데이터 필터링
     filtered_df = df.copy()
-    if selected_type != 'All':
+    if selected_type != '전체':
         filtered_df = filtered_df[filtered_df['model_type'] == selected_type]
     
-    # Sort
+    # 정렬
     if sort_by in filtered_df.columns:
         filtered_df = filtered_df.sort_values(sort_by, ascending=ascending)
     
-    # Display columns
+    # 표시 커럼
     display_cols = ['model', 'model_type', 'MAP@12']
     for col in ['test_recall', 'test_precision', 'test_ndcg', 'duration']:
         if col in filtered_df.columns:
@@ -509,7 +509,7 @@ def display_detailed_results(df: pd.DataFrame):
         filtered_df['timestamp_str'] = filtered_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M')
         display_cols.append('timestamp_str')
     
-    # Round numeric columns
+    # 숫자 커럼 반올림
     numeric_cols = ['MAP@12', 'test_recall', 'test_precision', 'test_ndcg']
     for col in numeric_cols:
         if col in filtered_df.columns:
@@ -517,21 +517,21 @@ def display_detailed_results(df: pd.DataFrame):
     
     if 'duration' in filtered_df.columns:
         filtered_df['duration'] = (filtered_df['duration'] / 60).round(1)
-        filtered_df.rename(columns={'duration': 'Duration (min)'}, inplace=True)
-        if 'Duration (min)' not in display_cols:
-            display_cols[display_cols.index('duration')] = 'Duration (min)'
+        filtered_df.rename(columns={'duration': '소요 시간 (분)'}, inplace=True)
+        if '소요 시간 (분)' not in display_cols:
+            display_cols[display_cols.index('duration')] = '소요 시간 (분)'
     
-    # Display table
+    # 테이블 표시
     st.dataframe(
         filtered_df[display_cols],
         use_container_width=True,
         height=600
     )
     
-    # Download button
+    # 다운로드 버튼
     csv = filtered_df[display_cols].to_csv(index=False)
     st.download_button(
-        label="📥 Download Results as CSV",
+        label="📥 결과를 CSV로 다운로드",
         data=csv,
         file_name=f"experiment_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv"
