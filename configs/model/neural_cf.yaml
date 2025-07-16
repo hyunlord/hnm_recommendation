@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - override /model: null
+
+model:
+  _target_: src.models.NeuralCF
+  num_users: ${data.num_users}
+  num_items: ${data.num_items}
+  mf_dim: 64
+  mlp_dims: [128, 64, 32]
+  dropout: 0.1
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  top_k: 12
+  use_pretrain: false
+
+# Training specific
+trainer:
+  max_epochs: 30
+  
+# Model specific data requirements
+data:
+  batch_size: 2048
+  negative_sampling_ratio: 4

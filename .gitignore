@@ -130,3 +130,31 @@ dmypy.json
 
 .idea
 data/
+
+# Project specific
+experiments/
+mlruns/
+wandb/
+lightning_logs/
+outputs/
+hydra_outputs/
+*.ckpt
+*.pt
+*.pth
+*.pkl
+
+# Large files
+*.csv
+*.json
+*.parquet
+*.feather
+
+# DS_Store
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Model artifacts
+model_artifacts/
+saved_models/

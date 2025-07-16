@@ -1,0 +1,22 @@
+# @package _global_
+defaults:
+  - override /model: null
+
+model:
+  _target_: src.models.MatrixFactorization
+  num_users: ${data.num_users}
+  num_items: ${data.num_items}
+  embedding_dim: 64
+  learning_rate: 0.001
+  weight_decay: 0.01
+  top_k: 12
+  sparse: true
+
+# Training specific
+trainer:
+  max_epochs: 20
+  
+# Model specific data requirements
+data:
+  batch_size: 4096
+  negative_sampling_ratio: 4

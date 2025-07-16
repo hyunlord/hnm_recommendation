@@ -1,0 +1,61 @@
+# Core ML Libraries
+torch>=2.0.0
+pytorch-lightning>=2.0.0
+torchmetrics>=0.11.0
+
+# Data Processing
+pandas>=1.5.0
+numpy>=1.24.0
+scikit-learn>=1.2.0
+scipy>=1.10.0
+
+# Recommendation Libraries
+implicit>=0.7.0
+surprise>=1.1.3
+
+# Graph Neural Networks (optional)
+# torch-geometric>=2.3.0
+# dgl>=1.1.0
+
+# NLP (for content-based filtering)
+nltk>=3.8.0
+transformers>=4.30.0
+
+# Visualization
+matplotlib>=3.6.0
+seaborn>=0.12.0
+plotly>=5.14.0
+streamlit>=1.20.0
+kaleido>=0.2.0  # For plotly static image export
+
+# Experiment Tracking
+mlflow>=2.3.0
+wandb>=0.15.0
+optuna>=3.1.0
+
+# API & Serving
+fastapi>=0.95.0
+uvicorn>=0.21.0
+pydantic>=1.10.0
+
+# Utilities
+python-dotenv>=1.0.0
+hydra-core>=1.3.0
+omegaconf>=2.3.0
+tqdm>=4.65.0
+joblib>=1.2.0
+
+# Testing
+pytest>=7.3.0
+pytest-cov>=4.0.0
+
+# Development
+jupyter>=1.0.0
+jupyterlab>=3.6.0
+ipywidgets>=8.0.0
+black>=23.0.0
+flake8>=6.0.0
+
+# MLOps (optional)
+# dvc>=3.0.0
+# docker>=6.0.0

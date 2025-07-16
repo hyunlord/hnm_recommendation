@@ -1,0 +1,79 @@
+# Main configuration file for H&M Recommendation System
+
+defaults:
+  - data: default
+  - model: neural_cf
+  - training: default
+  - _self_
+
+# Project settings
+project:
+  name: "hnm_recommendation"
+  seed: 42
+  device: "cuda" # or "cpu"
+  
+# Run name for tracking
+run_name: "${model.name}_${now:%Y%m%d_%H%M%S}"
+  
+# Paths
+paths:
+  data_dir: "data"
+  output_dir: "experiments"
+  checkpoint_dir: "${paths.output_dir}/checkpoints"
+  log_dir: "${paths.output_dir}/logs"
+  results_dir: "${paths.output_dir}/results"
+  
+# Data settings
+data:
+  train_weeks: 104  # Number of weeks for training
+  val_weeks: 1      # Number of weeks for validation
+  test_weeks: 1     # Number of weeks for testing
+  min_user_interactions: 5
+  min_item_interactions: 5
+  sample_size: null  # null for full data, or number for sampling
+  negative_sampling_ratio: 4
+  sample_fraction: 1.0
+  use_improved_datamodule: true  # Use improved data module
+  dataset_type: "standard"  # Options: standard, bpr, temporal
+  sampling_strategy: "uniform"  # Options: uniform, popularity, hard
+  cache_negatives: true  # Cache negative samples for efficiency
+  temporal_window_days: 7  # Window for temporal features
+  augment_data: false  # Data augmentation
+  normalize_features: true  # Normalize numerical features
+  
+# Model settings
+model:
+  name: "neural_cf"
+  embedding_dim: 64
+  hidden_dims: [128, 64, 32]
+  dropout: 0.2
+  
+# Training settings
+training:
+  batch_size: 1024
+  epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  early_stopping: true
+  patience: 5
+  num_workers: 4
+  save_top_k: 3
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  val_check_interval: 1.0
+  
+# Evaluation settings
+evaluation:
+  k_values: [5, 10, 12, 20]
+  metrics: ["map", "recall", "precision", "ndcg"]
+  
+# Logging settings
+logging:
+  enabled: true
+  logger: "tensorboard"  # Options: tensorboard, wandb, mlflow
+  log_every_n_steps: 100
+  
+# Hydra settings
+hydra:
+  run:
+    dir: ${paths.output_dir}/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}

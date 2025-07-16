@@ -1,0 +1,26 @@
+# @package _global_
+defaults:
+  - override /model: null
+
+model:
+  _target_: src.models.LightGCN
+  num_users: ${data.num_users}
+  num_items: ${data.num_items}
+  embedding_dim: 64
+  num_layers: 3
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  top_k: 12
+  alpha: null  # Use uniform weights
+
+# Training specific
+trainer:
+  max_epochs: 50
+  
+# Model specific data requirements
+data:
+  batch_size: 2048
+  negative_sampling_ratio: 1  # BPR uses 1:1 positive:negative
+  use_graph: true  # Enable graph construction
+  dataset_type: "bpr"  # Use BPR dataset for LightGCN
+  sampling_strategy: "uniform"  # Sampling strategy for negatives

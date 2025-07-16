@@ -1,0 +1,28 @@
+# @package _global_
+defaults:
+  - override /model: null
+
+model:
+  _target_: src.models.WideDeep
+  num_users: ${data.num_users}
+  num_items: ${data.num_items}
+  num_user_features: ${data.num_user_features}
+  num_item_features: ${data.num_item_features}
+  embedding_dim: 64
+  deep_layers: [512, 256, 128]
+  dropout: 0.1
+  use_wide_user_item: true
+  use_wide_features: true
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  top_k: 12
+
+# Training specific
+trainer:
+  max_epochs: 25
+  
+# Model specific data requirements
+data:
+  batch_size: 2048
+  negative_sampling_ratio: 4
+  use_features: true  # Enable feature loading
